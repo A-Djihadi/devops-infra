@@ -1,0 +1,75 @@
+version: "3.9"
+
+# Repo d'infrastructure centrale : démarre l'ensemble de la stack
+# (reverse proxy, backend Spring Boot, frontend Angular Shell + Remote)
+
+services:
+  # Reverse proxy Traefik — point d'entrée unique
+  proxy:
+    image: traefik:v3.0
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8088:8080"   # Dashboard Traefik
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - devops-network
+
+  # Backend Spring Boot
+  api:
+    image: ghcr.io/a-djihadi/devops-spring-app:latest
+    container_name: devops-api
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.localhost`)"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+    networks:
+      - devops-network
+
+  # Frontend Angular — Shell App
+  shell:
+    image: ghcr.io/a-djihadi/devops-angular-shell:latest
+    container_name: angular-shell
+    environment:
+      API_BASE_URL: http://api.localhost
+      REMOTE_APP_URL: http://remote.localhost/remoteEntry.js
+    depends_on:
+      api:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.shell.rule=Host(`app.localhost`)"
+      - "traefik.http.services.shell.loadbalancer.server.port=80"
+    networks:
+      - devops-network
+
+  # Frontend Angular — Remote App (Micro Frontend)
+  remote:
+    image: ghcr.io/a-djihadi/devops-angular-remote:latest
+    container_name: angular-remote
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.remote.rule=Host(`remote.localhost`)"
+      - "traefik.http.services.remote.loadbalancer.server.port=80"
+    networks:
+      - devops-network
+
+networks:
+  devops-network:
+    name: devops-network
+    driver: bridge
