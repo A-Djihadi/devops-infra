@@ -58,6 +58,7 @@ Accès :
 | Commande | Action |
 |---|---|
 | `make up` | Démarre la stack |
+| `make up-build` | Démarre la stack en reconstruisant les images locales |
 | `make down` | Arrête la stack |
 | `make pull` | Met à jour les images |
 | `make logs` | Affiche les logs |
@@ -74,8 +75,12 @@ Les variables d'environnement sont dans `.env` (copier depuis `.env.example`). E
 
 ## Repos liés
 
+> **Chaîne de déploiement :** l'infrastructure (instances EC2) est d'abord provisionnée par les repos Terraform — [devops-terraform-modules](https://github.com/A-Djihadi/devops-terraform-modules) crée les instances EC2 et [devops-terraform-remote-state](https://github.com/A-Djihadi/devops-terraform-remote-state) gère l'état distant — puis `devops-infra` déploie les conteneurs dessus.
+
 | Repo | Rôle |
 |---|---|
+| [devops-terraform-modules](https://github.com/A-Djihadi/devops-terraform-modules) | Provisionne les instances EC2 (infra) |
+| [devops-terraform-remote-state](https://github.com/A-Djihadi/devops-terraform-remote-state) | État distant Terraform |
 | [devops-spring-app](https://github.com/A-Djihadi/devops-spring-app) | Backend Java/Spring Boot |
 | [devops-angular-mfe](https://github.com/A-Djihadi/devops-angular-mfe) | Frontend Angular MFE |
 | [devops-kubernetes](https://github.com/A-Djihadi/devops-kubernetes) | Déploiement Kubernetes |

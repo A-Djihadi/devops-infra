@@ -23,7 +23,7 @@ services:
 
   # Backend Spring Boot
   api:
-    image: ghcr.io/a-djihadi/devops-spring-app:latest
+    image: ghcr.io/a-djihadi/devops-spring-app:${SPRING_IMAGE_TAG:-latest}
     container_name: devops-api
     environment:
       APP_ENV: ${APP_ENV:-local}
@@ -43,7 +43,7 @@ services:
 
   # Frontend Angular — Shell App
   shell:
-    image: ghcr.io/a-djihadi/devops-angular-shell:latest
+    image: ghcr.io/a-djihadi/devops-angular-shell:${SHELL_IMAGE_TAG:-latest}
     container_name: angular-shell
     environment:
       API_BASE_URL: http://api.localhost
@@ -60,7 +60,7 @@ services:
 
   # Frontend Angular — Remote App (Micro Frontend)
   remote:
-    image: ghcr.io/a-djihadi/devops-angular-remote:latest
+    image: ghcr.io/a-djihadi/devops-angular-remote:${REMOTE_IMAGE_TAG:-latest}
     container_name: angular-remote
     labels:
       - "traefik.enable=true"
